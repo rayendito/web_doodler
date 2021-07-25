@@ -34,34 +34,67 @@ function main(){
     var resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
 
     //positengs
+    var idxNowShape = 0;
+    var mode = 0; // default mode = pen (0)
     var positions = [];
 
     // event listeners
     var mouseClicked = false;
+
     canvas.addEventListener("mousedown", function(e){
       mouseClicked = true;
+      if(mode == 0){ // pen
+        positions.push([mode,[]]);
+      }
+      else if(mode == 1){ // line
+        var x = e.pageX - this.offsetLeft; 
+        var y = e.pageY - this.offsetTop;
+        positions.push([mode,[x,y,x,y]]);
+      }
     });
 
     canvas.addEventListener("mouseup", function(e){
       mouseClicked = false;
+      idxNowShape++;
     });
 
     canvas.addEventListener("mousemove", function(e){
       if(mouseClicked){
         var x = e.pageX - this.offsetLeft; 
         var y = e.pageY - this.offsetTop;
-        positions.push(x, y);
-        console.log(positions);
+        if(mode == 0){
+          positions[idxNowShape][1].push(x, y);
+        }
+        else if(mode == 1){ // line
+          positions[idxNowShape][1].pop();
+          positions[idxNowShape][1].pop();
+          positions[idxNowShape][1].push(x, y);
+        }
         drawToScreen();
       }
     });
 
+    // CLEAR BUTTON
+    const clr = document.getElementById("clearBtn");
+    clr.addEventListener("click", function(e){
+      idxNowShape = 0;
+      positions = [];
+      drawToScreen();
+    });
+
+    //CHANGE MODES
+    const pen = document.getElementById("penBtn");
+    pen.addEventListener("click", function(e){
+      mode = 0;
+    });
+
+    const line = document.getElementById("lineBtn");
+    line.addEventListener("click", function(e){
+      mode = 1;
+    });
+
     drawToScreen();
     function drawToScreen(){
-      var positionBuffer = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
       // Clear the canvas
       gl.clearColor(0,0,0,0);
       gl.clear(gl.COLOR_BUFFER_BIT);
@@ -72,22 +105,32 @@ function main(){
       gl.enableVertexAttribArray(positionAttributeLocation);
       gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
 
-      // Bind the position buffer.
-      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-      
-      // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
-      var size = 2;          // 2 components per iteration
-      var type = gl.FLOAT;   // the data is 32bit floats
-      var normalize = false; // don't normalize the data
-      var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
-      var offset = 0;        // start at the beginning of the buffer
-      gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+      for(var i = 0; i < positions.length; i++){
+        var positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions[i][1]), gl.STATIC_DRAW);
 
-      var primitiveType = gl.LINE_STRIP;
-      var offset = 0;
-      var count = positions.length/2;
-      console.log(count);
-      gl.drawArrays(primitiveType, offset, count);
+        // Bind the position buffer.
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        
+        // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
+        var size = 2;          // 2 components per iteration
+        var type = gl.FLOAT;   // the data is 32bit floats
+        var normalize = false; // don't normalize the data
+        var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+        var offset = 0;        // start at the beginning of the buffer
+        gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+
+        var offset = 0;
+        var count = positions[i][1].length/2;
+        if(positions[i][0] == 0){
+          var primitiveType = gl.LINE_STRIP;
+        }
+        else if(positions[i][0] == 1){
+          var primitiveType = gl.LINES;
+        }
+        gl.drawArrays(primitiveType, offset, count);
+      }
     }
 }
 
