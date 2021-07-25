@@ -5,11 +5,17 @@ function main(){
     const canvas = document.getElementById("canvas");
     const gl = canvas.getContext("webgl");
 
-    console.log("sampe");
     if (gl === null) {
         alert("Browser mnh tida support WebGL ;(");
         return;
     }
+
+    // resizing canvas spy jelas
+    canvas.width  = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+
+    // viewport
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
     // STEP 1 : CREATE SHADERS AND THE PROGRAM
     // locate tempat di GLSL to *bikin shader*
@@ -23,45 +29,66 @@ function main(){
     // create program
     const program = createProgram(gl, vertexShader, fragmentShader);
 
-    console.log("sampe sini");
-    // STEP 2 : DEFINE THE SHAPE TO BE DRAWN
+    //att and uniform locaitons
     var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
-    var positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    var resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
 
-    var positions = [
-        0, 0,
-        0, 0.5,
-        0.7, 0
-    ];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-    
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    //positengs
+    var positions = [];
 
-    // Clear the canvas
-    gl.clearColor(0,0,0,0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    // event listeners
+    var mouseClicked = false;
+    canvas.addEventListener("mousedown", function(e){
+      mouseClicked = true;
+    });
 
-    // Tell it to use our program (pair of shaders)
-    gl.useProgram(program);
+    canvas.addEventListener("mouseup", function(e){
+      mouseClicked = false;
+    });
 
-    gl.enableVertexAttribArray(positionAttributeLocation);
+    canvas.addEventListener("mousemove", function(e){
+      if(mouseClicked){
+        var x = e.pageX - this.offsetLeft; 
+        var y = e.pageY - this.offsetTop;
+        positions.push(x, y);
+        console.log(positions);
+        drawToScreen();
+      }
+    });
 
-    // Bind the position buffer.
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    
-    // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
-    var size = 2;          // 2 components per iteration
-    var type = gl.FLOAT;   // the data is 32bit floats
-    var normalize = false; // don't normalize the data
-    var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
-    var offset = 0;        // start at the beginning of the buffer
-    gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+    drawToScreen();
+    function drawToScreen(){
+      var positionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-    var primitiveType = gl.TRIANGLES;
-    var offset = 0;
-    var count = 3;
-    gl.drawArrays(primitiveType, offset, count);
+      // Clear the canvas
+      gl.clearColor(0,0,0,0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      // Tell it to use our program (pair of shaders)
+      gl.useProgram(program);
+
+      gl.enableVertexAttribArray(positionAttributeLocation);
+      gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+
+      // Bind the position buffer.
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      
+      // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
+      var size = 2;          // 2 components per iteration
+      var type = gl.FLOAT;   // the data is 32bit floats
+      var normalize = false; // don't normalize the data
+      var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+      var offset = 0;        // start at the beginning of the buffer
+      gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+
+      var primitiveType = gl.POINTS;
+      var offset = 0;
+      var count = positions.length/2;
+      console.log(count);
+      gl.drawArrays(primitiveType, offset, count);
+    }
 }
 
 function createProgram(gl, vertexShader, fragmentShader) {
@@ -91,4 +118,4 @@ function createShader(gl, type, source) {
     gl.deleteShader(shader);
   }
 
-  main()
+main();

@@ -13,9 +13,14 @@
     <!-- vertex shader -->
     <script id = "vertex-shader" type="notjs">
         attribute vec4 a_position;
+        uniform vec2 u_resolution;
 
         void main(){
-            gl_Position = a_position;
+            vec2 nolKeSatu = a_position.xy/u_resolution;
+            vec2 nolKeDua = nolKeSatu*2.0;
+            vec2 pxToClipSpace = nolKeDua - 1.0;
+            gl_Position = vec4(pxToClipSpace.x, pxToClipSpace.y*-1.0, 0, 1);
+            gl_PointSize = 3.0;
         }
     </script>
 
@@ -24,7 +29,7 @@
         precision mediump float;
         
         void main(){
-            gl_FragColor = vec4(1, 0, 0.5, 1);
+            gl_FragColor = vec4(0, 0, 0, 1);
         }
     </script>
 </head>
