@@ -31,12 +31,14 @@ function main(){
 
     //att and uniform locaitons
     var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+    var colorAttributeLocation = gl.getUniformLocation(program, "a_color");
     var resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
 
-    //positengs
+    // initial conditions
     var idxNowShape = 0;
     var mode = 0; // default mode = pen (0)
     var positions = [];
+    var colorRGB = [0.3, 0.4, 0.9, 1.0];
 
     // event listeners
     var mouseClicked = false;
@@ -93,6 +95,12 @@ function main(){
       mode = 1;
     });
 
+    //COLOR PICKER
+    const cpicker = document.getElementById("colorBtn");
+    cpicker.addEventListener("change", function(e){
+      console.log(e.target.value);
+    });
+
     drawToScreen();
     function drawToScreen(){
       // Clear the canvas
@@ -104,6 +112,7 @@ function main(){
 
       gl.enableVertexAttribArray(positionAttributeLocation);
       gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+      gl.uniform4fv(colorAttributeLocation, colorRGB);
 
       for(var i = 0; i < positions.length; i++){
         var positionBuffer = gl.createBuffer();
