@@ -83,7 +83,7 @@ function main(){
       var offset = 0;        // start at the beginning of the buffer
       gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
 
-      var primitiveType = gl.POINTS;
+      var primitiveType = gl.LINE_STRIP;
       var offset = 0;
       var count = positions.length/2;
       console.log(count);
