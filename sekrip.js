@@ -38,21 +38,26 @@ function main(){
     var idxNowShape = 0;
     var mode = 0; // default mode = pen (0)
     var positions = [];
-    var colorRGB = [0, 0, 0];
+    var colorRGB = [0, 0, 0]; // default color black
 
     // event listeners
     var mouseClicked = false;
 
     canvas.addEventListener("mousedown", function(e){
       mouseClicked = true;
+      var x = e.pageX - this.offsetLeft; 
+      var y = e.pageY - this.offsetTop;
       if(mode == 0){ // pen
         positions.push([mode,[],[]]);
       }
       else if(mode == 1){ // line
-        var x = e.pageX - this.offsetLeft; 
-        var y = e.pageY - this.offsetTop;
         const colorTwice = colorRGB.concat(colorRGB);
         positions.push([mode,[x,y,x,y],colorTwice]);
+      }
+      else if(mode == 2){ // square
+        const colorTwice = colorRGB.concat(colorRGB);
+        const colorFour = colorTwice.concat(colorTwice);
+        positions.push([mode,[x,y, x,y, x,y, x,y],colorFour]);
       }
     });
 
@@ -70,9 +75,16 @@ function main(){
           positions[idxNowShape][2].push(colorRGB[0], colorRGB[1], colorRGB[2]);
         }
         else if(mode == 1){ // line
-          positions[idxNowShape][1].pop();
-          positions[idxNowShape][1].pop();
+          for(var i = 0; i < 2; i++){
+            positions[idxNowShape][1].pop();
+          }
           positions[idxNowShape][1].push(x, y);
+        }
+        else if(mode == 2){//square
+          for(var i = 0; i < 6; i++){
+            positions[idxNowShape][1].pop();
+          }
+          
         }
         drawToScreen();
       }
@@ -95,6 +107,16 @@ function main(){
     const line = document.getElementById("lineBtn");
     line.addEventListener("click", function(e){
       mode = 1;
+    });
+    
+    const sqr = document.getElementById("squareBtn");
+    sqr.addEventListener("click", function(e){
+      mode = 2;
+    });
+
+    const rect = document.getElementById("rectangleBtn");
+    rect.addEventListener("click", function(e){
+      mode = 3;
     });
 
     //COLOR PICKER
