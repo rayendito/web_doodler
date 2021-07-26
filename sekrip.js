@@ -54,7 +54,7 @@ function main(){
         const colorTwice = colorRGB.concat(colorRGB);
         positions.push([mode,[x,y,x,y],colorTwice]);
       }
-      else if(mode == 2){ // square
+      else if(mode == 2 || mode == 3){ // square
         const colorTwice = colorRGB.concat(colorRGB);
         const colorFour = colorTwice.concat(colorTwice);
         positions.push([mode,[x,y, x,y, x,y, x,y],colorFour]);
@@ -100,6 +100,16 @@ function main(){
           else if(kuadran == 4){
             positions[idxNowShape][1].push(orX+sizer, orY, orX+sizer, orY+sizer, orX, orY+sizer);
           }
+        }
+        else if(mode == 3){
+          for(var i = 0; i < 6; i++){
+            positions[idxNowShape][1].pop();
+          }
+          var orX = positions[idxNowShape][1][0];
+          var orY = positions[idxNowShape][1][1];
+          var selisihX = x - orX;
+          var selisihY = y - orY;
+          positions[idxNowShape][1].push(orX+selisihX, orY, x, y, orX, orY+selisihY);
         }
         drawToScreen();
       }
@@ -197,7 +207,7 @@ function main(){
         else if(positions[i][0] == 1){
           var primitiveType = gl.LINES;
         }
-        else if(positions[i][0] == 2){
+        else if(positions[i][0] == 2 || positions[i][0] == 3){
           var primitiveType = gl.LINE_LOOP;
         }
         gl.drawArrays(primitiveType, offset, count);
