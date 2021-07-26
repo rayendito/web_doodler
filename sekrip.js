@@ -84,7 +84,22 @@ function main(){
           for(var i = 0; i < 6; i++){
             positions[idxNowShape][1].pop();
           }
-          
+          var orX = positions[idxNowShape][1][0];
+          var orY = positions[idxNowShape][1][1];
+          var kuadran = screenKuadran(orX, orY, x, y);
+          var sizer = Math.max(Math.abs(orX-x),Math.abs(orY-y));
+          if(kuadran == 1){
+            positions[idxNowShape][1].push(orX+sizer, orY, orX+sizer, orY-sizer, orX, orY-sizer);
+          }
+          else if(kuadran == 2){
+            positions[idxNowShape][1].push(orX-sizer, orY, orX-sizer, orY-sizer, orX, orY-sizer);
+          }
+          else if(kuadran == 3){
+            positions[idxNowShape][1].push(orX-sizer, orY, orX-sizer, orY+sizer, orX, orY+sizer);
+          }
+          else if(kuadran == 4){
+            positions[idxNowShape][1].push(orX+sizer, orY, orX+sizer, orY+sizer, orX, orY+sizer);
+          }
         }
         drawToScreen();
       }
@@ -182,6 +197,9 @@ function main(){
         else if(positions[i][0] == 1){
           var primitiveType = gl.LINES;
         }
+        else if(positions[i][0] == 2){
+          var primitiveType = gl.LINE_LOOP;
+        }
         gl.drawArrays(primitiveType, offset, count);
       }
     }
@@ -219,6 +237,25 @@ function hexToRGB(hex){
   var g = parseInt(hex[3]+hex[4], 16);
   var b = parseInt(hex[5]+hex[6], 16);
   return [r,g,b];//return 23,14,45 -> reformat if needed 
+}
+
+function screenKuadran(orX, orY, curX, curY){
+  if(orX < curX){
+    if(orY < curY){
+      return 4;
+    }
+    else{
+      return 1;
+    }
+  }
+  else{
+    if(orY < curY){
+      return 3;
+    }
+    else{
+      return 2;
+    }
+  }
 }
 
 main();
