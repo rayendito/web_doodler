@@ -31,14 +31,14 @@ function main(){
 
     //att and uniform locaitons
     var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
-    var colorAttributeLocation = gl.getUniformLocation(program, "a_color");
+    var colorAttributeLocation = gl.getAttribLocation(program, "a_color");
     var resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
 
     // initial conditions
     var idxNowShape = 0;
     var mode = 0; // default mode = pen (0)
     var positions = [];
-    var colorRGB = [0.3, 0.4, 0.9, 1.0];
+    var colorRGB = [0, 0, 0];
 
     // event listeners
     var mouseClicked = false;
@@ -46,12 +46,13 @@ function main(){
     canvas.addEventListener("mousedown", function(e){
       mouseClicked = true;
       if(mode == 0){ // pen
-        positions.push([mode,[]]);
+        positions.push([mode,[],[]]);
       }
       else if(mode == 1){ // line
         var x = e.pageX - this.offsetLeft; 
         var y = e.pageY - this.offsetTop;
-        positions.push([mode,[x,y,x,y]]);
+        const colorTwice = colorRGB.concat(colorRGB);
+        positions.push([mode,[x,y,x,y],colorTwice]);
       }
     });
 
@@ -66,6 +67,7 @@ function main(){
         var y = e.pageY - this.offsetTop;
         if(mode == 0){
           positions[idxNowShape][1].push(x, y);
+          positions[idxNowShape][2].push(colorRGB[0], colorRGB[1], colorRGB[2]);
         }
         else if(mode == 1){ // line
           positions[idxNowShape][1].pop();
@@ -98,7 +100,10 @@ function main(){
     //COLOR PICKER
     const cpicker = document.getElementById("colorBtn");
     cpicker.addEventListener("change", function(e){
-      console.log(e.target.value);
+      const RGBval = hexToRGB(e.target.value);
+      colorRGB[0] = RGBval[0];
+      colorRGB[1] = RGBval[1];
+      colorRGB[2] = RGBval[2];
     });
 
     drawToScreen();
@@ -109,26 +114,43 @@ function main(){
 
       // Tell it to use our program (pair of shaders)
       gl.useProgram(program);
-
-      gl.enableVertexAttribArray(positionAttributeLocation);
       gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
-      gl.uniform4fv(colorAttributeLocation, colorRGB);
 
       for(var i = 0; i < positions.length; i++){
+        // bind the position buffer
         var positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions[i][1]), gl.STATIC_DRAW);
-
-        // Bind the position buffer.
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        // bind the color buffer
+        var colorBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(positions[i][2]), gl.STATIC_DRAW);
         
-        // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
+        // POSITION Attribute
+        //enable bind
+        gl.enableVertexAttribArray(positionAttributeLocation);
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+        // how to get
         var size = 2;          // 2 components per iteration
         var type = gl.FLOAT;   // the data is 32bit floats
         var normalize = false; // don't normalize the data
         var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
         var offset = 0;        // start at the beginning of the buffer
         gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+
+        // COLOR Attribute
+        //enable bind
+        gl.enableVertexAttribArray(colorAttributeLocation);
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+
+        // how to get
+        size = 3;                 // 3 components per iteration soalnya 3d, ada x y z
+        type = gl.UNSIGNED_BYTE;  // the data is 8bit unsigned values
+        normalize = true;         // normalize the data (convert from 0-255 to 0-1)
+        stride = 0;               // 0 = move forward size * sizeof(type) each iteration to get the next position
+        offset = 0;               // start at the beginning of the buffer
+        gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
 
         var offset = 0;
         var count = positions[i][1].length/2;
@@ -169,5 +191,12 @@ function createShader(gl, type, source) {
     console.log(gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
   }
+
+function hexToRGB(hex){
+  var r = parseInt(hex[1]+hex[2], 16);
+  var g = parseInt(hex[3]+hex[4], 16);
+  var b = parseInt(hex[5]+hex[6], 16);
+  return [r,g,b];//return 23,14,45 -> reformat if needed 
+}
 
 main();
